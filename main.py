@@ -32,3 +32,5 @@ assuming full 162 game season for all teams
 asuming 9 inning game, disregarding extra inning or called off games
 Also defensive WAR were omitted which may cause up to 2WAR difference per player
 '''
+if __name__ == "__main__":
+    main()
