@@ -2,13 +2,15 @@ import { useState } from 'react'
 import './Search.css'
 import { useNavigate } from 'react-router-dom'
 
+
 function Search() {
   const [search, setSearch] = useState('')
   const nav = useNavigate()
 
   const handleSearch = () => {
     if (search.trim() !== '') {
-      nav(`/player/${search.trim()}`)
+      //nav(`/player/${search.trim()}`)
+      nav('/ErrorPage/')
     }
   }
 
