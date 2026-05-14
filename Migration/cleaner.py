@@ -151,9 +151,3 @@ class DataCleaner: #load
         ]]
 
         league.to_csv("LeagueStat.csv", index=False)  
-def main():
-    cleaner = DataCleaner()
-    league_df = cleaner.load_league_stats()
-    player_df = cleaner.load_player_stats()
-    print("meow")
-main()

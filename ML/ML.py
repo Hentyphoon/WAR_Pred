@@ -5,7 +5,7 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 import matplotlib.pyplot as plt
- 
+  
 
  ##TODO finish NN model and Radnom forest Classifier model
 

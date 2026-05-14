@@ -8,7 +8,7 @@ function Search() {
   const nav = useNavigate()
 
   const handleSearch = () => {
-    if (search.trim() !== '') {
+    if (search.trim() !== '') { // change to validate player name here
       //nav(`/player/${search.trim()}`)
       nav('/ErrorPage/')
     }

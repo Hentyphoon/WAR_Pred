@@ -5,7 +5,7 @@ function Player() {
 
   return (
     <div className="Player">
-      <h1>Meow</h1>
+      <h1>{name}</h1>
       {/* fetch and display player stats here */}
     </div>
   )
