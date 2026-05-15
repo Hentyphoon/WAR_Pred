@@ -9,7 +9,7 @@ IMPORTANT: GDP opportunities and league wOBA is estimated for this project
 '''
 import datetime as dt
 
-class WARCalculator:
+class SabermetricsCalculator:
     def WRAA(player_df, league_df):
         wOBA = league_df["wOBA"]
         league_wOBA = league_df["league_wOBA"]
