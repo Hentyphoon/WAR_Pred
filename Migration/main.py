@@ -6,4 +6,6 @@ import pandas as pd
 def main():
     cleaner = DataCleaner()
     calculator = SabermetricsCalculator()
-    cleaner.load_player_stats()
+    player = cleaner.load_player_stats()
+    league = cleaner.load_league_stats()
+main()

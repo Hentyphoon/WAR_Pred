@@ -23,7 +23,7 @@ class DataCleaner: #load
 
         people_df["Name"] = people_df["nameFirst"] + " " + people_df["nameLast"]
         player_df = player_df.merge(people_df[["IDfg", "Name", "birthYear"]], on="IDfg", how="left")
-
+        player_df["Age"] = player_df["Season"] - player_df["birthYear"]
         player_df["PA"] = (
             player_df["AB"]
             + player_df["BB"]
@@ -40,7 +40,21 @@ class DataCleaner: #load
             - player_df["HBP"]
             - player_df["SF"]
         )
-        player_df["Age"] = player_df["Season"] - player_df["birthYear"]
+        sum_cols = [
+        "PA", "AB", "H", "1B", "2B", "3B", "HR",
+        "BB", "IBB", "UBB", "HBP",
+        "SB", "CS", "GDP", "GDP_OPP", "SF"
+        ]
+        last_cols = ["Name", "Age", "teamID"] 
+
+        agg_dict = {col: "sum" for col in sum_cols}
+        agg_dict.update({col: "last" for col in last_cols})
+
+        player_df = (
+            player_df
+            .groupby(["IDfg", "Season"], as_index=False)
+            .agg(agg_dict)
+        )
         weights = {
             "BB": 0.69,
             "HBP": 0.72,
@@ -60,7 +74,6 @@ class DataCleaner: #load
 
         denominator = player_df["AB"] + player_df["UBB"] + player_df["HBP"] + player_df["SF"]
         player_df["wOBA"] = numerator / denominator
-
         player_df = player_df[[
             "IDfg", "Name", "Season", "Age",
             "PA", "AB", "H", "1B", "2B", "3B", "HR",
@@ -70,6 +83,7 @@ class DataCleaner: #load
         ]]
 
         player_df.to_csv("PlayerStat.csv", index=False) 
+        return player_df
 
     def load_league_stats(self): #load all league stat
         bat = pd.read_csv("Batting.csv")
@@ -150,4 +164,5 @@ class DataCleaner: #load
             "GDP", "GDP_OPP", "league_wOBA"  
         ]]
 
-        league.to_csv("LeagueStat.csv", index=False)  
+        league.to_csv("LeagueStat.csv", index=False)
+        return league  
