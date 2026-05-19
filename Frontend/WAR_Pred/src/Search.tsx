@@ -9,7 +9,9 @@ function Search() {
 
   const handleSearch = () => {
     if (search.trim() !== '') { // change to validate player name here
-      //nav(`/player/${search.trim()}`)
+      nav(`/Player/${search.trim()}`)
+    }
+    else{
       nav('/ErrorPage/')
     }
   }
