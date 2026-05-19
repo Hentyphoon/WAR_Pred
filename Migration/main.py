@@ -8,4 +8,5 @@ def main():
     calculator = SabermetricsCalculator()
     player = cleaner.load_player_stats()
     league = cleaner.load_league_stats()
+    print(league.dtypes)
 main()

@@ -7,7 +7,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Search />} />
-      <Route path="/player/:name" element={<Player />} />
+      <Route path="/player/:id" element={<Player />} />
       <Route path="/ErrorPage" element={<ErrorPage />} />
     </Routes>
   )
