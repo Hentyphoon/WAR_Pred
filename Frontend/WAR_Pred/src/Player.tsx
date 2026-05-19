@@ -29,14 +29,13 @@ function Player() {
   const [player, setPlayer] = useState<PlayerSeason[]>([])
   useEffect(() => {
     const fetchPlayer = async () => {
-      const res = await fetch(`http://localhost:8000/players/${id}`)
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/players/${id}`)
       const data = await res.json()
       setPlayer(data)
     }
 
     fetchPlayer()
   }, [id])
-  console.log(player)
   return (
     <div className="Player">
       <h1>{id}</h1>
