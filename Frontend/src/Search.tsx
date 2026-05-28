@@ -8,10 +8,8 @@ function Search() {
   const nav = useNavigate()
 
   const handleSearch = async () => {
-    console.log(`Searching for: ${search}`)
     if (search.trim() === '') {
       nav('/ErrorPage/')
-      console.log('Empty search query')
       return
     }
 
@@ -21,14 +19,12 @@ function Search() {
 
       if (data.length === 0) {
         nav('/ErrorPage/')
-        console.log('No player found')
         return
       }
-      const player = data[0]
+      const player = data[0]//replace with better search later
 
       nav(`/Player/${player.idfg}`)
     } catch (err) {
-      console.error(err)
       nav('/ErrorPage/')
     }
   }
@@ -47,7 +43,6 @@ return (
         }
       }}
     />
-    <button onClick={handleSearch}>Search</button>  {/* add this */}
   </div>
 )
 }
