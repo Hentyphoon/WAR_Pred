@@ -1,9 +1,8 @@
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import './Player.css'
 
-function Player() {
-  const { id } = useParams()
-  type PlayerSeason = {
+type PlayerSeason = {
   idfg: string
   name: string
   season: number
@@ -11,9 +10,9 @@ function Player() {
   pa: number
   ab: number
   h: number
-  "1B": number
-  "2B": number
-  "3B": number
+  '1B': number
+  '2B': number
+  '3B': number
   hr: number
   bb: number
   ibb: number
@@ -26,7 +25,12 @@ function Player() {
   sf: number
   woba: number
 }
+
+function Player() {
+  const { id } = useParams()
+  const nav = useNavigate()
   const [player, setPlayer] = useState<PlayerSeason[]>([])
+
   useEffect(() => {
     const fetchPlayer = async () => {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/players/${id}`)
@@ -36,19 +40,56 @@ function Player() {
 
     fetchPlayer()
   }, [id])
-  return (
-    <div className="Player">
-      <h1>{id}</h1>
 
+  const name = player[0]?.name ?? id
+
+  return (
+  <div className="Player">
+    <div className="player-top">
+      <button className="back-btn" onClick={() => nav('/')}>
+        Home
+      </button>
+
+      <button
+        className="predict-btn"
+        onClick={() => nav(`/predictions/${id}`)}
+      >
+        View Predictions
+      </button>
+    </div>
+
+    <div className="player-header">
+      <h1>{name}</h1>
+    </div>
+
+    <div className="stitch" />
+
+    <div className="season-list">
       {player.map((season, i) => (
-        <div key={i}>
-          <p>{season.season}</p>
-          <p>HR: {season.hr}</p>
-          <p>AVG stats etc...</p>
+        <div className="season-row" key={i}>
+          <span className="season-year">{season.season}</span>
+
+          <div className="stat">
+            <span className="stat-label">AVG</span>
+            <span className="stat-value">
+              {(season.h / season.ab).toFixed(3).replace(/^0/, '')}
+            </span>
+          </div>
+
+          <div className="stat">
+            <span className="stat-label">HR</span>
+            <span className="stat-value">{season.hr}</span>
+          </div>
+
+          <div className="stat">
+            <span className="stat-label">wOBA</span>
+            <span className="stat-value">{season.woba.toFixed(3)}</span>
+          </div>
         </div>
       ))}
     </div>
-  )
+  </div>
+)
 }
 
 export default Player

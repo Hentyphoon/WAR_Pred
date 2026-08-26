@@ -1,0 +1,70 @@
+.Predictions {
+  background-color: #FCFCF2;
+  min-height: 100vh;
+  width: 100%;
+  padding: 4rem 1.5rem 6rem;
+  color: #14140F;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.predictions-top {
+  margin-bottom: 1.5rem;
+}
+
+.back-btn {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border: 1px solid #A3302B;
+  border-radius: 4px;
+  background: transparent;
+  color: #A3302B;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.Predictions h1 {
+  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  font-size: 2.5rem;
+  font-weight: 400;
+  margin: 0 0 1.5rem;
+}
+
+.prediction-stats {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.prediction-stats .stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.prediction-stats .stat-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6E6C5E;
+}
+
+.prediction-stats .stat-value {
+  font-family: ui-monospace, "SF Mono", "Roboto Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 1.4rem;
+}
+
+.Predictions pre {
+  background: #F1EFE4;
+  border: 1px solid #DAD5C4;
+  border-radius: 6px;
+  padding: 1rem;
+  overflow-x: auto;
+  font-family: ui-monospace, "SF Mono", "Roboto Mono", monospace;
+  font-size: 0.9rem;
+}
+
+.Predictions [role="alert"] {
+  color: #A3302B;
+}
