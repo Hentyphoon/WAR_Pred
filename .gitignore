@@ -5,4 +5,4 @@ node_modules/
 .env
 .venv/
 venv/
-ML/app/models/
+ML/app/model/
