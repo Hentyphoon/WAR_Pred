@@ -1,6 +1,9 @@
 {
   "scripts": {
-    "dev": "concurrently -n frontend,backend,ml \"npm run dev --prefix frontend\" \"npm run dev --prefix backend\" \"npm run dev:ml\"",
+    "dev": "concurrently -n frontend,backend,ml \"npm run dev --prefix Frontend\" \"npm run dev --prefix Backend\" \"npm run dev:ml\"",
     "dev:ml": "py -3 -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8001 --app-dir ML"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.7"
   }
 }

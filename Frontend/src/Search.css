@@ -37,3 +37,31 @@
 .search-input:focus {
   border-bottom-color: #555;
 }
+
+.search-results {
+  position: absolute;
+  top: calc(50% + 4rem);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(600px, 80%);
+  max-height: calc(50% - 5rem);
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.search-results button {
+  width: 100%;
+  padding: 0.5rem;
+  border: none;
+  background: transparent;
+  color: #000;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.search-results button:hover,
+.search-results button:focus-visible {
+  background: #EDEDDD;
+}

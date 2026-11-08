@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import "./Predictions.css";
+import "./predictions.css";
 
 type PredictionResponse = {
-	idfg: number;
+	idfg: string;
 	prediction: {
 		bsr: number;
 		wraa: number;
@@ -75,7 +75,7 @@ export default function Predictions() {
 	return (
 		<main className="Predictions">
 			<div className="predictions-top">
-				<button className="back-btn" onClick={() => nav(`/players/${id}`)}>
+				<button className="back-btn" onClick={() => nav(`/player/${id}`)}>
 					Back
 				</button>
 			</div>

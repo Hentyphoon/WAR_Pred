@@ -21,6 +21,7 @@ app.add_middleware(
 )
 
 MODEL_DIR = Path(__file__).parent / "model"
+MIN_ML_SEASON = 1961  # expansion era; earlier seasons stay viewable but are not modeled
 
 
 
@@ -86,14 +87,13 @@ if not DATABASE_URL:
         "directory, same as the training notebook does."
     )
 engine = create_engine(DATABASE_URL)
-print(f"[DEBUG] Using DATABASE_URL: {DATABASE_URL}")  # TEMP - remove after debugging
 
 
 SABERMETRIC_QUERY = text(
     """
     SELECT "Age", "BsR", "wSB", "RLR", "wGDP", "runCS", "league_wSB", "RPW"
     FROM playersabermetric
-    WHERE "IDfg" = :idfg
+    WHERE "IDfg" = :idfg AND "Season" >= :min_season
     ORDER BY "Season" DESC
     LIMIT 1
     """
@@ -106,10 +106,12 @@ def get_sabermetric_row(idfg: str) -> dict[str, float]:
     from the playersabermetric table (built in the training notebook).
     """
     with engine.connect() as conn:
-        row = conn.execute(SABERMETRIC_QUERY, {"idfg": idfg}).mappings().fetchone()
+        row = conn.execute(SABERMETRIC_QUERY, {"idfg": idfg, "min_season": MIN_ML_SEASON}).mappings().fetchone()
 
     if row is None:
-        raise LookupError(f"No playersabermetric row found for IDfg={idfg}")
+        raise LookupError(
+            f"No prediction available. Predictions only cover hitters with batting data from {MIN_ML_SEASON} onward."
+        )
 
     return {k: float(v) for k, v in row.items()}
 

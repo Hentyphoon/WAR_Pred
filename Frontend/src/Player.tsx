@@ -23,7 +23,7 @@ type PlayerSeason = {
   gdp: number
   gdp_opp: number
   sf: number
-  woba: number
+  woba: number | null
 }
 
 function Player() {
@@ -72,7 +72,7 @@ function Player() {
           <div className="stat">
             <span className="stat-label">AVG</span>
             <span className="stat-value">
-              {(season.h / season.ab).toFixed(3).replace(/^0/, '')}
+              {season.ab > 0 ? (season.h / season.ab).toFixed(3).replace(/^0/, '') : '—'}
             </span>
           </div>
 
@@ -83,7 +83,7 @@ function Player() {
 
           <div className="stat">
             <span className="stat-label">wOBA</span>
-            <span className="stat-value">{season.woba.toFixed(3)}</span>
+            <span className="stat-value">{season.woba?.toFixed(3) ?? '—'}</span>
           </div>
         </div>
       ))}
