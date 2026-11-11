@@ -1,17 +1,53 @@
+import json
 import os
+from contextlib import asynccontextmanager
+from functools import lru_cache
 from pathlib import Path
 
 import joblib
-import torch
-import torch.nn as nn
+import pandas as pd
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, text
 
+from app.features import FEATURES, add_history
+
 load_dotenv(Path(__file__).parent.parent / ".env")  # ml/app/main.py -> ml/.env
 
-app = FastAPI()
+MODEL_DIR = Path(__file__).parent / "model"
+MIN_RECENT_PA = 100
+TARGETS = ["wRAA", "BsR", "RLR"]
+
+
+@lru_cache
+def load_models() -> tuple[int, dict]:
+    """Return the last season of training data and a model per target."""
+    metadata = json.loads((MODEL_DIR / "metadata.json").read_text())
+    return metadata["data_through"], {target: joblib.load(MODEL_DIR / f"{target}.joblib") for target in TARGETS}
+
+
+@lru_cache
+def get_engine():
+    database_url = os.getenv("DATABASE_URL")
+    if not database_url:
+        raise RuntimeError(
+            "DATABASE_URL is not set. Either export it in your shell "
+            "(export DATABASE_URL=...) or add it to a .env file in this "
+            "directory, same as the training notebook does."
+        )
+    return create_engine(database_url)
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    # Fail at startup, not on the first request, if models or config are missing.
+    load_models()
+    get_engine()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -20,144 +56,58 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-MODEL_DIR = Path(__file__).parent / "model"
-MIN_ML_SEASON = 1961  # expansion era; earlier seasons stay viewable but are not modeled
 
-
-
-def make_wraa_model() -> nn.Module:
-    # trained on: ['Age', 'BsR', 'wSB', 'RLR', 'wGDP']  (5 features)
-    return nn.Sequential(
-        nn.Linear(5, 16),
-        nn.ReLU(),
-        nn.Linear(16, 16),
-        nn.ReLU(),
-        nn.Linear(16, 1),
-    )
-
-
-def make_bsr_model() -> nn.Module:
-    # trained on: ['wSB', 'runCS', 'league_wSB']  (3 features)
-    return nn.Sequential(
-        nn.Linear(3, 16),
-        nn.ReLU(),
-        nn.Linear(16, 16),
-        nn.ReLU(),
-        nn.Linear(16, 1),
-    )
-
-
-def make_rlr_model() -> nn.Module:
-    # trained on: ['Age', 'RPW', 'league_wSB', 'wGDP']  (4 features)
-    return nn.Sequential(
-        nn.Linear(4, 16),
-        nn.ReLU(),
-        nn.Linear(16, 16),
-        nn.ReLU(),
-        nn.Linear(16, 1),
-    )
-
-
-def load_torch_model(builder, filename: str) -> nn.Module:
-    model = builder()
-    state_dict = torch.load(MODEL_DIR / filename, map_location="cpu")
-    model.load_state_dict(state_dict)
-    model.eval()
-    return model
-
-
-wraa_model = load_torch_model(make_wraa_model, "wraa_model.pth")
-bsr_model = load_torch_model(make_bsr_model, "bsr_model.pth")
-rlr_model = load_torch_model(make_rlr_model, "rlr_model.pth")
-
-
-scaler_X_wraa = joblib.load(MODEL_DIR / "scaler_X_wraa.pkl")
-scaler_X_rlr = joblib.load(MODEL_DIR / "scaler_X_rlr.pkl")
-scaler_X_bsr = joblib.load(MODEL_DIR / "scaler_X_bsr.pkl")
-scaler_y_wraa = joblib.load(MODEL_DIR / "scaler_y_wraa.pkl")
-scaler_y_bsr = joblib.load(MODEL_DIR / "scaler_y_bsr.pkl")
-scaler_y_rlr = joblib.load(MODEL_DIR / "scaler_y_rlr.pkl")
-
-
-DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    raise RuntimeError(
-        "DATABASE_URL is not set. Either export it in your shell "
-        "(export DATABASE_URL=...) or add it to a .env file in this "
-        "directory, same as the training notebook does."
-    )
-engine = create_engine(DATABASE_URL)
-
-
-SABERMETRIC_QUERY = text(
+HISTORY_QUERY = text(
     """
-    SELECT "Age", "BsR", "wSB", "RLR", "wGDP", "runCS", "league_wSB", "RPW"
+    SELECT "IDfg", "Season", "Age", "PA", "wRAA", "BsR", "RLR", "RPW", "oWAR"
     FROM playersabermetric
-    WHERE "IDfg" = :idfg AND "Season" >= :min_season
-    ORDER BY "Season" DESC
-    LIMIT 1
+    WHERE "IDfg" = :idfg AND "Season" BETWEEN :first_season AND :last_season
     """
 )
 
 
-def get_sabermetric_row(idfg: str) -> dict[str, float]:
-    """
-    Look up the most recent season's sabermetric components for a player
-    from the playersabermetric table (built in the training notebook).
-    """
-    with engine.connect() as conn:
-        row = conn.execute(SABERMETRIC_QUERY, {"idfg": idfg, "min_season": MIN_ML_SEASON}).mappings().fetchone()
+def load_history(idfg: str, first_season: int, last_season: int) -> pd.DataFrame:
+    return pd.read_sql(
+        HISTORY_QUERY,
+        get_engine(),
+        params={"idfg": idfg, "first_season": first_season, "last_season": last_season},
+    )
 
-    if row is None:
+
+def get_features(idfg: str, data_through: int) -> pd.DataFrame:
+    """Build next-season model inputs for a player active in the latest season."""
+    history = load_history(idfg, data_through - 2, data_through)
+    latest = history[history["Season"] == data_through]
+
+    if latest.empty or history["PA"].sum() < MIN_RECENT_PA:
         raise LookupError(
-            f"No prediction available. Predictions only cover hitters with batting data from {MIN_ML_SEASON} onward."
+            f"No prediction available. Predictions only cover hitters active in {data_through} "
+            f"with at least {MIN_RECENT_PA} PA over the last three seasons."
         )
 
-    return {k: float(v) for k, v in row.items()}
-
-
-def predict_one(model: nn.Module, scaler_X, scaler_y, x_ordered: list[float]) -> float:
-    x_scaled = scaler_X.transform([x_ordered])
-    x_tensor = torch.tensor(x_scaled, dtype=torch.float32)
-
-    with torch.no_grad():
-        y_scaled = model(x_tensor).numpy()
-
-    y = scaler_y.inverse_transform(y_scaled)
-    return float(y[0, 0])
+    target = pd.DataFrame(
+        [{"IDfg": idfg, "Season": data_through + 1, "Age": float(latest["Age"].iloc[0]) + 1}]
+    )
+    return add_history(target, history)
 
 
 @app.get("/prediction/{idfg}")
 def get_prediction(idfg: str):
+    data_through, models = load_models()
     try:
-        row = get_sabermetric_row(idfg)
+        features = get_features(idfg, data_through)
     except LookupError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
 
-    wraa = predict_one(
-        wraa_model,
-        scaler_X_wraa,
-        scaler_y_wraa,
-        [row["Age"], row["BsR"], row["wSB"], row["RLR"], row["wGDP"]],
-    )
-    bsr = predict_one(
-        bsr_model,
-        scaler_X_bsr,
-        scaler_y_bsr,
-        [row["wSB"], row["runCS"], row["league_wSB"]],
-    )
-    rlr = predict_one(
-        rlr_model,
-        scaler_X_rlr,
-        scaler_y_rlr,
-        [row["Age"], row["RPW"], row["league_wSB"], row["wGDP"]],
-    )
+    predicted = {target: float(models[target].predict(features[FEATURES])[0]) for target in TARGETS}
 
     return {
         "idfg": idfg,
+        "season": data_through + 1,
         "prediction": {
-            "bsr": bsr,
-            "wraa": wraa,
-            "rlr": rlr,
+            "bsr": predicted["BsR"],
+            "wraa": predicted["wRAA"],
+            "rlr": predicted["RLR"],
+            "owar": sum(predicted.values()) / float(features["RPW_l1"].iloc[0]),
         },
     }
