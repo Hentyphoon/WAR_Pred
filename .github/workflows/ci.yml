@@ -15,9 +15,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
@@ -25,7 +25,7 @@ jobs:
             Backend/package-lock.json
             Frontend/package-lock.json
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
           cache: pip
@@ -33,11 +33,14 @@ jobs:
             requirements-dev.txt
             ML/requirements.txt
 
-      - name: Install dependencies
-        run: |
-          npm ci --prefix Backend
-          npm ci --prefix Frontend
-          pip install -r requirements-dev.txt
+      - name: Install backend dependencies
+        run: npm ci --prefix Backend
+
+      - name: Install frontend dependencies
+        run: npm ci --prefix Frontend
+
+      - name: Install Python dependencies
+        run: pip install -r requirements-dev.txt
 
       - name: Backend tests
         run: npm test --prefix Backend
