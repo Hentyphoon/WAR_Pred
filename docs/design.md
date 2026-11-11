@@ -54,6 +54,15 @@ The red dashed "stitch" divider is the one deliberate flourish. It stays as a se
 - Say what the prediction leaves out: this is offensive WAR, with no fielding.
 - When a player has no prediction, say why in one plain sentence. Pre-1961 players stay fully viewable.
 
+## Live games page (planned)
+
+- `/live` lists today's games as ruled rows. `/live/:gamePk` shows one game's score, inning, current at-bat, and play-by-play.
+- Text and numbers only: no animated diamond, pulsing "LIVE" badge, or scoreboard graphic. The hard rules still apply.
+- Newest play first, in the same ruled-row style as season data.
+- Show when the data last updated, and say so plainly if it has gone stale.
+- Mark a revised play with a short text note rather than silently changing it.
+- When no games are on, say so in one plain sentence.
+
 ## Known gaps
 
 To address in the UI update:
