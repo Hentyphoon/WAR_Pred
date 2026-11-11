@@ -37,15 +37,7 @@ jobs:
         run: npm ci --prefix Backend
 
       - name: Install frontend dependencies
-        run: |
-          set +e
-          npm ci --prefix Frontend 2>&1 | tee npm-ci.log
-          status=${PIPESTATUS[0]}
-          # Surface npm's error lines as annotations, which show on the run summary.
-          grep -E 'npm (error|ERR!)' npm-ci.log | tail -10 | while IFS= read -r line; do
-            echo "::error title=npm ci::$line"
-          done
-          exit $status
+        run: npm ci --prefix Frontend
 
       - name: Install Python dependencies
         run: pip install -r requirements-dev.txt
