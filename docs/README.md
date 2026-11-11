@@ -90,7 +90,13 @@ cd Migration
 py -3 main.py
 ```
 
-Then run `ML/notebook/ML.ipynb` from top to bottom in VS Code or Jupyter. Together these create the database tables and the models in `ML/app/model/`.
+Then install the notebook's extra requirements, including PyTorch, and run `ML/notebook/ML.ipynb` from top to bottom in VS Code or Jupyter:
+
+```bash
+py -3 -m pip install -r ML/requirements-notebook.txt
+```
+
+Together, `main.py` and the notebook create the database tables and the models in `ML/app/model/`.
 
 ### 4. Start the app
 
@@ -111,6 +117,8 @@ npm test
 ```
 
 This runs every suite. None of them need a database, trained models, or network access.
+
+GitHub Actions runs the same checks, plus the frontend lint and build, on every pull request and every push to `main`. See `.github/workflows/ci.yml`.
 
 | Suite | Command | Tool | Covers |
 |---|---|---|---|

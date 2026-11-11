@@ -4,7 +4,6 @@ pandas
 numpy
 scikit-learn
 joblib
-torch
 sqlalchemy<2.1
 psycopg2-binary
 python-dotenv
