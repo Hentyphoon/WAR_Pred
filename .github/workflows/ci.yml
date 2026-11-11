@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# A newer push replaces any run still going for the same branch or PR.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            Backend/package-lock.json
+            Frontend/package-lock.json
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: |
+            requirements-dev.txt
+            ML/requirements.txt
+
+      - name: Install backend dependencies
+        run: npm ci --prefix Backend
+
+      - name: Install frontend dependencies
+        run: npm ci --prefix Frontend
+
+      - name: Install Python dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Backend tests
+        run: npm test --prefix Backend
+
+      - name: Frontend lint
+        run: npm run lint --prefix Frontend
+
+      - name: Frontend tests
+        run: npm test --prefix Frontend
+
+      - name: Frontend build
+        run: npm run build --prefix Frontend
+
+      - name: Python tests
+        run: python -m pytest

@@ -19,4 +19,11 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // Fast refresh only applies to app components, not test helpers.
+    files: ['src/**/*.test.tsx', 'src/test-utils.tsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])

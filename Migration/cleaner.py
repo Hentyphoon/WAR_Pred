@@ -11,9 +11,10 @@ UPDATE: Since no fielding stats are provided by pybaseball for positions played,
 
 import pandas as pd
 import numpy as np
-from pybaseball import batting_stats, fielding_stats, pitching_stats
 import datetime as dt
 import time
+
+BLANK_AS_ZERO = ["HBP", "SF", "SH", "IBB", "SB", "CS", "GDP"]  # not recorded in early seasons
 
 
 class DataCleaner: #load 
@@ -23,6 +24,7 @@ class DataCleaner: #load
 
         people_df["Name"] = people_df["nameFirst"] + " " + people_df["nameLast"]
         player_df = player_df.merge(people_df[["IDfg", "Name", "birthYear"]], on="IDfg", how="left")
+        player_df[BLANK_AS_ZERO] = player_df[BLANK_AS_ZERO].fillna(0)
         player_df["Age"] = player_df["Season"] - player_df["birthYear"]
         player_df["PA"] = (
             player_df["AB"]
@@ -56,7 +58,7 @@ class DataCleaner: #load
             .agg(agg_dict)
         )
         weights = {
-            "BB": 0.69,
+            "UBB": 0.69,
             "HBP": 0.72,
             "1B": 0.88,
             "2B": 1.247,
@@ -64,7 +66,7 @@ class DataCleaner: #load
             "HR": 2.031
         }
         numerator = (
-            player_df["BB"] * weights["BB"]
+            player_df["UBB"] * weights["UBB"]
             + player_df["HBP"] * weights["HBP"]
             + player_df["1B"] * weights["1B"]
             + player_df["2B"] * weights["2B"]
@@ -73,7 +75,7 @@ class DataCleaner: #load
         )
 
         denominator = player_df["AB"] + player_df["UBB"] + player_df["HBP"] + player_df["SF"]
-        player_df["wOBA"] = numerator / denominator
+        player_df["wOBA"] = (numerator / denominator).replace([np.inf, -np.inf], np.nan)
         player_df = player_df[[
             "IDfg", "Name", "Season", "Age",
             "PA", "AB", "H", "1B", "2B", "3B", "HR",
@@ -87,21 +89,22 @@ class DataCleaner: #load
 
     def load_league_stats(self): #load all league stat
         bat = pd.read_csv("Batting.csv")
+        bat[BLANK_AS_ZERO] = bat[BLANK_AS_ZERO].fillna(0)
         bat["1B"] = bat["H"] - bat["2B"] - bat["3B"] - bat["HR"]
         bat["UBB"] = bat["BB"] - bat["IBB"]
         bat["PA"] = (
             bat["AB"]
             + bat["BB"]
-            + bat["HBP"].fillna(0)
-            + bat["SF"].fillna(0)
-            + bat["SH"].fillna(0)
+            + bat["HBP"]
+            + bat["SF"]
+            + bat["SH"]
         )
         bat["GDP_OPP"] = (
             bat["PA"]
             - bat["HR"]
             - bat["BB"]
-            - bat["HBP"].fillna(0)
-            - bat["SF"].fillna(0)
+            - bat["HBP"]
+            - bat["SF"]
         )
 
         league_bat = (
@@ -143,11 +146,11 @@ class DataCleaner: #load
         league = league_bat.merge(league_pitch, on="Season", how="left")
 
         weights = {
-            "BB": 0.69, "HBP": 0.72, "1B": 0.88,
+            "UBB": 0.69, "HBP": 0.72, "1B": 0.88,
             "2B": 1.247, "3B": 1.578, "HR": 2.031
         }
         numerator = (
-            league["BB"] * weights["BB"]
+            league["UBB"] * weights["UBB"]
             + league["HBP"] * weights["HBP"]
             + league["1B"] * weights["1B"]
             + league["2B"] * weights["2B"]
