@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { formatStat } from "./formatStat";
 import "./predictions.css";
 
 type PredictionResponse = {
@@ -13,7 +14,6 @@ type PredictionResponse = {
 
 const API_URL =
 	import.meta.env.VITE_PREDICTION_API_URL ?? "http://localhost:8001";
-
 export default function Predictions() {
 	const { id } = useParams();
 	const nav = useNavigate();
@@ -91,15 +91,15 @@ export default function Predictions() {
 					<div className="prediction-stats">
 						<div className="stat">
 							<span className="stat-label">BSR</span>
-							<span className="stat-value">{prediction.prediction.bsr.toFixed(2)}</span>
+							<span className="stat-value">{formatStat(prediction.prediction.bsr)}</span>
 						</div>
 						<div className="stat">
 							<span className="stat-label">wRAA</span>
-							<span className="stat-value">{prediction.prediction.wraa.toFixed(2)}</span>
+							<span className="stat-value">{formatStat(prediction.prediction.wraa)}</span>
 						</div>
 						<div className="stat">
 							<span className="stat-label">RLR</span>
-							<span className="stat-value">{prediction.prediction.rlr.toFixed(2)}</span>
+							<span className="stat-value">{formatStat(prediction.prediction.rlr)}</span>
 						</div>
 					</div>
 				</section>
